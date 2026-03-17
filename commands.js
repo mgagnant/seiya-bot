@@ -1,189 +1,86 @@
-const { EmbedBuilder } = require('discord.js');
-const { FAC_COLORS, CL_EMOJI, SK_EMOJI } = require('./data/heroes');
-const { sortByOwned } = require('./data/db');
+const DB = {
+  "Kanon du Dragon des Mers": { cl:"Combattant",row:"Avant",fac:"Atlantide", tags:["Bannissement","Hybride P/M","Vol de vie"], skills:[{n:"Dimension du triangle d'or",t:"Ultime",d:"350–450% DGT-M + Bannissement + Vol de vie."},{n:"Suppression triangulaire",t:"Éveil",d:"Étourdis → météores + 200% Vol de vie."}], art:["Trident de Poséidon","Anneau du présage","Sceau de perles scellées"], artR:{"Trident de Poséidon":"Synergie Atlantide","Anneau du présage":"Boost ATQ-M","Sceau de perles scellées":"Amplifie CC"}, fc:["Interdimensionnel","Énergie des marées","Majesté des Gémeaux","Sekishiki Meikaiha","Puissance de Sekishiki","Charge d'énergie infinie"], fcR:{"Interdimensionnel":"Rage +100 après interdim — synergy Bannissement","Énergie des marées":"Rage +250 début — ultime plus vite","Majesté des Gémeaux":"+15% ATQ + durée étourdissement","Sekishiki Meikaiha":"Vol de vie sur ultime AOE","Puissance de Sekishiki":"+32% DGT ultime si 5+ cibles","Charge d'énergie infinie":"+35% DGT feu/glace cumulable"}, bonds:[{n:"Triade de l\'Atlantide",a:["Krishna de Chrysaor","Sorrento de la Sirène"],e:"+15% VIT + 25% réduction DGT"}], note:"Bannissement + Vol de vie = combo durable." },
 
-// ── HERO EMBED ─────────────────────────────────────────────
-function buildHeroEmbed(heroName, hero) {
-  const color = FAC_COLORS[hero.fac] || 0x95A5A6;
-  const emoji = CL_EMOJI[hero.cl] || '⚔️';
+  "Saori Kido": { cl:"Support",row:"Arrière",fac:"Sanctuaire", tags:["Soins","Réanimation","Bouclier absolu"], skills:[{n:"Prière d\'Athéna",t:"Ultime",d:"Soigne 3 alliés PV les plus bas."},{n:"Protection de la Déesse",t:"Éveil",d:"En quittant : bouclier -100% DGT."}], art:["Sceptre de Niké","La jarre sacrée","Collier d\'Athéna"], artR:{"Sceptre de Niké":"Support","La jarre sacrée":"Soins","Collier d\'Athéna":"Bouclier éveil"}, fc:["La Déesse de l\'espoir","Bénédiction d\'Athéna","Unis comme les doigts de la main","Jeune fille au milieu des fleurs","La prière de la jeune fille","Rédemption de la Déesse"], fcR:{"La Déesse de l\'espoir":"Aura -5% DGT P/M tous alliés — signature","Bénédiction d\'Athéna":"Purge débuffs 2 alliés toutes 10s","Unis comme les doigts de la main":"-80% DGT-P allié < 30% PV","Jeune fille au milieu des fleurs":"+8% VIT comp/ATQ sur allié soigné","La prière de la jeune fille":"-80% DGT-M allié < 30% PV","Rédemption de la Déesse":"+20% regen Rage + Invincibilité Saga"}, bonds:[{n:"Querelle sans fin",a:["Julian Solo"],e:"+15% durée buffs"}], note:"Prioriser ATQ pour soins plus puissants." },
 
-  const embed = new EmbedBuilder()
-    .setColor(color)
-    .setTitle(`${emoji} ${heroName}`)
-    .setDescription(`**${hero.cl}** · ${hero.row} · ${hero.fac}`)
-    .setFooter({ text: 'Saint Seiya Rebirth 2 EX · /build pour les recommandations' });
+  "Mû du Bélier": { cl:"Support",row:"Médiane",fac:"Sanctuaire", tags:["Bouclier équipe","Soins","Purge"], skills:[{n:"Extinction stellaire",t:"Ultime",d:"48–60% DGT-M × 12 + bouclier 240–300% ATQ."},{n:"Filet de cristal",t:"Éveil",d:"Immobilisation AOE → Étourdissement 5s."}], art:["Bouclier d\'Athéna","Sceptre de Niké","La jarre sacrée"], artR:{"Bouclier d\'Athéna":"Boucliers","Sceptre de Niké":"Support","La jarre sacrée":"Soins"}, fc:["Télékinésie","Défense télékinésique","Mur de cristal","Protecteur du cristal","Puissance du cristal","Unis comme les doigts de la main"], fcR:{"Télékinésie":"+3% DGT-M — signature Mû","Défense télékinésique":"Réduction DGT-P — signature défense","Mur de cristal":"+15% valeur bouclier — boost bouclier équipe","Protecteur du cristal":"Résistance CRIT sur allié bouclier 8s","Puissance du cristal":"DGT-M + réduction CRIT ennemi par bouclier","Unis comme les doigts de la main":"-80% DGT-P allié < 30% PV"}, bonds:[{n:"Amis en or",a:["Aldébaran du Taureau"],e:"+15% bouclier"}], note:"Bond Aldébaran prioritaire." },
 
-  // Tags
-  if (hero.tags && hero.tags.length) {
-    embed.addFields({ name: '🏷️ Caractéristiques', value: hero.tags.map(t => `\`${t}\``).join(' '), inline: false });
-  }
+  "Aldébaran du Taureau": { cl:"Tank",row:"Avant",fac:"Sanctuaire", tags:["Iaido","Super armure","Bouclier PV"], skills:[{n:"Grande corne",t:"Ultime",d:"100–120% DGT-P × 2 + Étourdissement 5s."},{n:"Protection du Taureau",t:"Éveil",d:"Bouclier équipe 15–30% PV max + Stabilité."}], art:["Bouclier d\'Athéna","Ceinture d\'Abel","Casque d\'Athéna"], artR:{"Bouclier d\'Athéna":"Boucliers PV","Ceinture d\'Abel":"Super armure","Casque d\'Athéna":"Défense Iaido"}, fc:["Corne de rupture","Constitution du Taureau","Gardien d\'or","Position défensive","Forteresse mobile","Incassable"], fcR:{"Corne de rupture":"+2.5% ATQ — signature Aldébaran","Constitution du Taureau":"+25% PV max -10% ATQ — tank pur","Gardien d\'or":"Immunité mort 1× + réduction DGT 200% 6s","Position défensive":"+10% DEF-P permanent","Forteresse mobile":"Piétinement toutes 15s + étourdissement","Incassable":"+5×6% DGT-P début — option hybride"}, bonds:[{n:"Amis en or",a:["Mû du Bélier"],e:"+15% bouclier"},{n:"Homme fort",a:["Thor de Phecda gamma"],e:"+10% PV max"}], note:"Maximiser PV — Constitution du Taureau core." },
 
-  // Skills (max 5 pour ne pas dépasser la limite Discord)
-  const skills = hero.skills || [];
-  const mainSkills = skills.slice(0, 5);
-  if (mainSkills.length) {
-    const skillText = mainSkills.map(s => {
-      const em = SK_EMOJI[s.t] || '▫️';
-      return `${em} **${s.n}** *(${s.t})*\n${s.d}`;
-    }).join('\n\n');
-    embed.addFields({ name: '⚔️ Skills', value: skillText.slice(0, 1024), inline: false });
-  }
+  "Saga des Gémeaux": { cl:"Combattant",row:"Avant",fac:"Sanctuaire", tags:["DPS burst","Anti-CC","Bannissement"], skills:[{n:"Explosion galactique",t:"Ultime",d:"360–450% DGT-P × 3 + Projection."},{n:"Interdimensionnel",t:"Passif",d:"Purge CC auto + invincibilité 1s."}], art:["Dague d\'or","Épée de Damoclès","Anneau du présage"], artR:{"Dague d\'or":"VIT+crit","Épée de Damoclès":"Exécution","Anneau du présage":"ATQ-M"}, fc:["Majesté des Gémeaux","Interdimensionnel","Lueur cramoisie","Rêve illusoire","Puissance dimensionnelle","Voyageur dimensionnel"], fcR:{"Majesté des Gémeaux":"+15% ATQ + durée étourdissement +40% — signature","Interdimensionnel":"Stabilité + Rage après interdim — purge CC","Lueur cramoisie":"+2.4% VIT ATQ par Saignement ×15 — multi-hit","Rêve illusoire":"+20% VIT ATQ + sosies sous 35% PV","Puissance dimensionnelle":"+25% DGT compétences + réduction CD rotations","Voyageur dimensionnel":"DGT-M % PV max sur ennemis en interdim + Vol de vie"}, bonds:[{n:"La rébellion de Pope",a:["Aiolos du Sagittaire"],e:"+10% crit"}], note:"Rédemption de la Déesse donne Invincibilité après interdim — core." },
 
-  if (skills.length > 5) {
-    embed.addFields({ name: '...', value: `+${skills.length - 5} skill(s) supplémentaire(s). Utilise \`/build\` pour voir le build complet.`, inline: false });
-  }
+  "Aiolia du Lion": { cl:"Combattant",row:"Avant",fac:"Sanctuaire", tags:["Multi-hit","Vol de vie","Berserker"], skills:[{n:"Plasma foudroyant",t:"Ultime",d:"5 ATQ × 3 cibles : 140–180% DGT-P."},{n:"Rage du Lion",t:"Passif",d:"À < 40% PV : +50% VIT ATQ + 50% Vol de vie 12s."}], art:["Épée sainte","Dague d\'or","Brigaman"], artR:{"Épée sainte":"DGT-P holy","Dague d\'or":"VIT+crit","Brigaman":"Tank/counter"}, fc:["Lion colérique","Crocs du Lion","Rapide comme l\'éclair","Cosmos en lutte","Attaque puissante, défense faible","Poing de la fureur du lion"], fcR:{"Lion colérique":"+15% ATQ + Stabilité quand PV < 20% — Berserker","Crocs du Lion":"+toucher + DGT-P sup après crit — multi-hit","Rapide comme l\'éclair":"+35% VIT ATQ 20s — ATQ de base seul. RÉDUIT DGT compétences -50%","Cosmos en lutte":"+4% rupture — perce défenses","Attaque puissante, défense faible":"+25% DGT infligés — burst Berserker","Poing de la fureur du lion":"Signature Aiolia — DGT-P sur crit"}, bonds:[{n:"Affrontement des volontés",a:["Shaka de la Vierge"],e:"+18% VIT ATQ"},{n:"Affection fraternelle",a:["Aiolos du Sagittaire"],e:"+10% résistance critique"},{n:"Volonté héritée",a:["Ikki du Lion"],e:"+10% crit"}], note:"Rapide comme l\'éclair idéal seulement si build ATQ de base pur." },
 
-  // Note
-  if (hero.note) {
-    embed.addFields({ name: '💡 Stratégie', value: hero.note, inline: false });
-  }
+  "Seiya de Pégase divin": { cl:"Combattant",row:"Avant",fac:"Sanctuaire", tags:["Cosmos brûlant","Anti-Divins","Super armure"], skills:[{n:"Comète de Pégase",t:"Ultime",d:"200–400% DGT bruts + Vol de vie 150%."},{n:"Volonté inébranlable",t:"Éveil",d:"En Cosmos brûlant : bouclier 5–7 hits."}], art:["Épée sainte","Pomme d\'or","Ceinture d\'Abel"], artR:{"Épée sainte":"DGT-P holy","Pomme d\'or":"Cosmos+soins","Ceinture d\'Abel":"Holy+armure"}, fc:["Coup de pied de Pégase","Puissance absolue","Renaissance et renouveau","Technique secrète la plus puissante","Affrontement des volontés","Se libérer"], fcR:{"Coup de pied de Pégase":"Signature Pégase","Puissance absolue":"+VIT comp + DGT P/M après compétences CD ×3","Renaissance et renouveau":"+20% ATQ/DEF après réanimation × 3 cumuls","Technique secrète la plus puissante":"+8% VIT comp par tranche 5s étourdissement ×5","Affrontement des volontés":"+10% ATQ +30% DGT si seul vs ennemi — 1v1","Se libérer":"Purge étourdissement + immunité 3s — Anti-CC"}, bonds:[], note:"Encaisser → Cosmos brûlant → burst ultime." },
 
-  return embed;
+  "Ikki du Phénix divin": { cl:"Mage",row:"Arrière",fac:"Sanctuaire", tags:["Brûlure AOE","Résurrection"], skills:[{n:"Ailes du Phénix dressées",t:"Ultime",d:"120–160% DGT-M AOE + Brûlure."},{n:"Flamme de renaissance",t:"Passif",d:"À la mort → résurrection."}], art:["Diadème d\'Éris","Anneau du présage","Trident d\'Éris"], artR:{"Diadème d\'Éris":"Brûlure","Anneau du présage":"ATQ-M","Trident d\'Éris":"Debuff"}, fc:["Flamme du Phénix","Phénix de feu","Renaissance et renouveau","Déchaînement des flammes","Flammes ardentes","Charge d\'énergie infinie"], fcR:{"Flamme du Phénix":"+2% ATQ ×5 par brûlure — signature Ikki","Phénix de feu":"Brûlure 3 ennemis + DGT-M 15%/2.5s toutes 25s","Renaissance et renouveau":"+20% ATQ/DEF après résurrection × 3","Déchaînement des flammes":"Brûlure 2 ennemis + DGT-M 20% dès 5s","Flammes ardentes":"+12% DEF + DGT Brûlure AOE % PV max","Charge d\'énergie infinie":"+35% DGT feu cumulable — Brûlure AOE"}, bonds:[], note:"Résurrection + Flamme du Phénix = remontée en puissance après mort." },
+
+  "Poséidon": { cl:"Mage",row:"Médiane",fac:"Atlantide", tags:["Orbes divins","10 combos","Terrain aquatique"], skills:[{n:"Tsunami apocalyptique",t:"Ultime",d:"140–220% DGT-P AOE + terrain Palais."},{n:"Maîtrise du pouvoir divin",t:"Éveil",d:"CD orbes → 2s. Après 5 compétences : Explosion."}], art:["Trident de Poséidon","Casque de l\'Empereur des mers","Anneau du présage"], artR:{"Trident de Poséidon":"Signature","Casque de l\'Empereur des mers":"Tank eau","Anneau du présage":"Cosmos"}, fc:["Énergie des marées","Puissance triangulaire","Tempête de coups","Veine d\'eau souterraine","Cascade inversée","Puissance du Cosmos"], fcR:{"Énergie des marées":"Rage +250 — orbes Rage plus vite","Puissance triangulaire":"+18% ATQ + barrière CC toutes 6s","Tempête de coups":"+15% rupture + DGT-P — perce défenses","Veine d\'eau souterraine":"+20% soins reçus — terrain eau","Cascade inversée":"ATQ += 8% DEF-P après 30s","Puissance du Cosmos":"Signature cosmos mage"}, bonds:[], note:"Diversifier les Orbes pour maximiser les explosions." },
+
+  "Thétis de la Sirène marine": { cl:"Support",row:"Arrière",fac:"Atlantide", tags:["Soins rebondissants","Réduction DGT"], skills:[{n:"Chanson de la Sirène",t:"Cycle",d:"-20–40% DGT équipe. 1× par combat."},{n:"Gardes d\'Atlantide",t:"Éveil",d:"Officier Atlantide + Super armure."}], art:["Sceptre de Niké","La jarre sacrée","Lyre d\'Apollon"], artR:{"Sceptre de Niké":"Support","La jarre sacrée":"Soins","Lyre d\'Apollon":"Chanson"}, fc:["Mélodie de la Sirène","La prière de la jeune fille","Veine d\'eau souterraine","Une goutte de pluie douce","Protection de June","Cascade inversée"], fcR:{"Mélodie de la Sirène":"Debuff DGT cible étourdis + counter — signature Sirène","La prière de la jeune fille":"-80% DGT-M allié < 30% PV","Veine d\'eau souterraine":"+20% soins reçus — eau","Une goutte de pluie douce":"+100 Rage début — Chanson plus vite","Protection de June":"Soin 50% ATQ à 10s et 20s","Cascade inversée":"ATQ += 8% DEF-P après 30s"}, bonds:[], note:"Chanson à usage unique — timing crucial." },
+
+  "Baian du Cheval des Mers": { cl:"Tank",row:"Avant",fac:"Atlantide", tags:["Anti-ATQ de base","Réduction DGT"], skills:[{n:"Vagues géantes déferlantes",t:"Ultime",d:"128–160% DGT-P × 8 + Étourdissement."},{n:"Vagues terrifiantes",t:"Éveil",d:"Vagues auto → debuff ATQ de base -25% ×3."}], art:["Casque de l\'Empereur des mers","Bouclier d\'Athéna","Brigaman"], artR:{"Casque de l\'Empereur des mers":"Tank eau","Bouclier d\'Athéna":"Bouclier","Brigaman":"Counter"}, fc:["Défense anti-ondes","Énergie des marées","Forteresse mobile","Position défensive","Défense à mains nues","Constitution du Taureau"], fcR:{"Défense anti-ondes":"-20% DGT ultime subi — counter ultime ennemi","Énergie des marées":"Rage +250 début — ultime vagues plus vite","Forteresse mobile":"Piétinement + étourdissement toutes 15s — pression","Position défensive":"+10% DEF-P permanent","Défense à mains nues":"-25% DGT ATQ de base subi — synergie debuff","Constitution du Taureau":"+25% PV max — tank pur"}, bonds:[], note:"Counter DPS physiques ATQ de base." },
+
+  "Casa des Lyumnades": { cl:"Support",row:"Médiane",fac:"Atlantide", tags:["Transformation","Faiblesse Exposée"], skills:[{n:"Illusion du démon aquatique",t:"Ultime",d:"Transformation 10–15s."},{n:"Esprits perspicaces",t:"Cycle",d:"Faiblesse Exposée : +10–20% DGT reçus ×3."}], art:["Anneau de Pandore","Boîte scellée","Anneau du présage"], artR:{"Anneau de Pandore":"Contrôle","Boîte scellée":"Faiblesse","Anneau du présage":"Cosmos"}, fc:["Déguisement","Labyrinthe fantôme","Intrigue dévoilée","Préparation de plan","Acuité sonore","Suppression ultime"], fcR:{"Déguisement":"-24.6% DGT continus — signature furtive","Labyrinthe fantôme":"+4% esquive — survie Transformation","Intrigue dévoilée":"Purge Défaillance + +30% ATQ 12s","Préparation de plan":"+80 Rage par esquive — Faiblesse plus vite","Acuité sonore":"Brise invisibilité + 100% DGT-M — anti-furtif","Suppression ultime":"-20% DGT ultime + drain Rage ennemi"}, bonds:[], note:"Faiblesse ×3 = +60% DGT reçus — combo équipe." },
+
+  "Krishna de Chrysaor": { cl:"Tank",row:"Avant",fac:"Atlantide", tags:["Système de Chakra","Super armure permanente","Partage DGT"], skills:[{n:"Lance aveuglante",t:"Ultime",d:"100–150% DGT-P AOE + Capitulation."},{n:"Tourbillon de la lance d\'or",t:"Éveil",d:"Tant que bouclier : AOE 80% DGT-P × 2."}], art:["Épée de Siegfried","Bouclier de Siegfried","Lance longue de la Balance"], artR:{"Épée de Siegfried":"DGT-P","Bouclier de Siegfried":"Défense","Lance longue de la Balance":"Lance"}, fc:["Incassable","Énergie des marées","Passer de la défense à l\'attaque","Défense de la Balance","Lance d\'or","Bouclier du Cosmos du Dragon"], fcR:{"Incassable":"+5×6% DGT-P début — Chakra offensif","Énergie des marées":"Rage +250 — Chakra plus vite","Passer de la défense à l\'attaque":"+12% DEF-P +12% ATQ sous 50% PV permanent","Défense de la Balance":"+12% parade + Super Armure — tank","Lance d\'or":"+15% rupture + DGT-P sur DEF ennemi","Bouclier du Cosmos du Dragon":"Signature bouclier Dragon"}, bonds:[{n:"Triade de l\'Atlantide",a:["Kanon du Dragon des Mers","Sorrento de la Sirène"],e:"+15% VIT + 25% réduction DGT"}], note:"Bouclier actif = Super armure permanente." },
+
+  "Io de Scylla": { cl:"Mage",row:"Médiane",fac:"Atlantide", tags:["Invocatrice","Scylla persistante"], skills:[{n:"Tornade géante",t:"Ultime",d:"300–400% DGT-M + Projection."},{n:"Banshee terrifiante",t:"Éveil",d:"Scylla persiste après mort."}], art:["Anneau du présage","Pomme d\'or","Trône du Lotus d\'Or"], artR:{"Anneau du présage":"Cosmos","Pomme d\'or":"Soins","Trône du Lotus d\'Or":"Support cosmos"}, fc:["Puissance du Cosmos","Jeune fille au milieu des fleurs","Étreinte du ver","Étreinte du ver immobilisante","Papillon épris de lumière","Le guetteur"], fcR:{"Puissance du Cosmos":"Signature cosmos mage","Jeune fille au milieu des fleurs":"+8% VIT comp/ATQ sur allié soigné","Étreinte du ver":"-20% DGT P/M si CC — protection","Étreinte du ver immobilisante":"Immobilisation + Capitulation sur cible","Papillon épris de lumière":"Brise invisibilité + étourdissement 5s","Le guetteur":"+30% soins reçus — sustain"}, bonds:[], note:"Maximiser ATQ pour Scylla plus résistante." },
+
+  "Isaac de Kraken": { cl:"Support",row:"Arrière",fac:"Atlantide", tags:["Gel","Draineur de Rage"], skills:[{n:"Aurore boréale",t:"Ultime",d:"192–240% DGT-M × 3 + Gel 6s."},{n:"Canopée de l\'aurore",t:"Éveil",d:"-50 Rage × 3 AOE. +50 Rage × 3 alliés."}], art:["Sceau de perles scellées","Anneau de Pandore","Casque de l\'Empereur des mers"], artR:{"Sceau de perles scellées":"Amplifie Gel","Anneau de Pandore":"Contrôle","Casque de l\'Empereur des mers":"Défense"}, fc:["Âge glaciaire","Bouclier de givre","Gel sanguin","Mage de givre","Énergie aurorale","Énergie du gel immédiat"], fcR:{"Âge glaciaire":"-10% DGT P/M + dissipe Super Armure/Stabilité via ultime","Bouclier de givre":"Réduction DGT après chaque gel — tanky","Gel sanguin":"Anti-soins sur gelés ×10 cumulable — punit les healers","Mage de givre":"50% chance drain 100 Rage sur gel — Canopée synergy","Énergie aurorale":"+250 Rage alliés à 15s — Canopée immédiate","Énergie du gel immédiat":"Convertit Air glacial en Gel vrai"}, bonds:[{n:"Héritage de l\'air glacial",a:["Camus du Verseau"],e:"+18% VIT"}], note:"Gel + Canopée = drain Rage massif." },
+
+  "Aiolos du Sagittaire": { cl:"Archer",row:"Arrière",fac:"Sanctuaire", tags:["Sniper","Anti-soins","Hors contact"], skills:[{n:"Flèche d\'or",t:"Ultime",d:"350–450% DGT-P + -90% soins 18s."},{n:"Bénédiction de l\'archer",t:"Éveil",d:"Hors contact : +12% crit + +30% toucher."}], art:["Flèche d\'or du Fantôme","Épée de Damoclès","Dague d\'or"], artR:{"Flèche d\'or du Fantôme":"Archer debuffs","Épée de Damoclès":"Exécution","Dague d\'or":"VIT+crit"}, fc:["Tir de flèche d\'or","Flèche d\'or","Archer d\'or","Yeux d\'aigle","Chasse","Puissance des étoiles"], fcR:{"Tir de flèche d\'or":"Signature archer Aiolos","Flèche d\'or":"50% DGT-P + -80% soins si PV < 20% — exécution","Archer d\'or":"+12% réduction DGT P/M + VIT comp/ATQ après déplacement","Yeux d\'aigle":"Signature précision hors contact","Chasse":"+12% VIT comp/ATQ par invocation — marque cible","Puissance des étoiles":"DGT CRIT augmentés sur étourdis"}, bonds:[{n:"La rébellion de Pope",a:["Saga des Gémeaux"],e:"+10% crit"}], note:"Garder hors contact — Bénédiction permanente." },
+
+  "Shura du Capricorne": { cl:"Combattant",row:"Médiane",fac:"Sanctuaire", tags:["Excalibur","Parade","Silence"], skills:[{n:"Coup pointé d\'Excalibur",t:"Ultime",d:"280–360% DGT-P × 8 + brise bouclier."},{n:"Frappe à l\'Épée sainte",t:"Éveil",d:"Tous les 2 Coups en rafale → AOE + brise bouclier."}], art:["Épée sainte","Épée de Damoclès","Dague d\'or"], artR:{"Épée sainte":"Excalibur","Épée de Damoclès":"Exécution","Dague d\'or":"VIT+crit"}, fc:["Messager d\'Excalibur","Héritage d\'Excalibur","Puissante Excalibur","Gardien désespéré","Guetter avant de frapper","Frappe contre"], fcR:{"Messager d\'Excalibur":"+16% ATQ après kill — Excalibur signature","Héritage d\'Excalibur":"+10% crit +20% DGT crit — Excalibur crit","Puissante Excalibur":"+25% DGT sur cibles bouclier + brise armure","Gardien désespéré":"Absorbe 80% DGT allié < 30% — tanky","Guetter avant de frapper":"Réduction DGT 32% 20s + soin final — survie","Frappe contre":"+10% parade + Vol de vie + DGT-P après parade"}, bonds:[{n:"Chevalier dévoué",a:["Siegfried de Dubhe alpha"],e:"+12% parade"},{n:"Or et ténèbres",a:["Surplis de Shura"],e:"+8% parade + esquive"}], note:"Parade → Coup en rafale → Frappe ultime." },
+
+  "Thor de Phecda gamma": { cl:"Combattant",row:"Avant",fac:"Asgard", tags:["Berserker scaling","Stabilité"], skills:[{n:"Poing ouragan du titan",t:"Ultime",d:"200–250% DGT-P + Étourdissement."},{n:"Volonté inébranlable",t:"Passif",d:"+12,5% ATQ par tranche 7% PV perdus (×8)."}], art:["Épée de Balmung","Corne de Galar","Anneau des Nibelungen"], artR:{"Épée de Balmung":"Asgard DGT","Corne de Galar":"Asgard buff","Anneau des Nibelungen":"Asgard PV"}, fc:["Le loup et le garçon","Puissance du Titan","Déchirure de hache géante","Attaque puissante, défense faible","Smash atomique","Constitution du Taureau"], fcR:{"Le loup et le garçon":"+15% DGT invocations — Asgard signature","Puissance du Titan":"DGT CRIT bonus quand PV bas — Berserker","Déchirure de hache géante":"DGT-P bonus quand PV bas — Berserker synergy","Attaque puissante, défense faible":"+25% DGT infligés — burst Berserker","Smash atomique":"+3% DGT-P — physique permanent","Constitution du Taureau":"+25% PV max — plus de PV = plus d\'ATQ à perdre"}, bonds:[{n:"Homme fort",a:["Aldébaran du Taureau"],e:"+10% PV max"}], note:"Plus il perd de PV, plus son ATQ monte — encaisser volontairement." },
+
+  "Seiya du Sagittaire": { cl:"Combattant",row:"Arrière",fac:"Sanctuaire", tags:["Hybride mêlée/distance","Anti-boss"], skills:[{n:"Flèche d\'or",t:"Ultime",d:"360–408% DGT-P + DGT bruts PV perdus. +100% DGT boss."},{n:"Flèche miraculeuse",t:"Éveil",d:"+30% DGT contre dieux/boss. Dernier survivant : immunité mort."}], art:["Flèche d\'or du Fantôme","Épée de Damoclès","Dague d\'or"], artR:{"Flèche d\'or du Fantôme":"Archer","Épée de Damoclès":"Exécution","Dague d\'or":"VIT+crit"}, fc:["Tir de flèche d\'or","Coup de pied de Pégase","Attaque puissante, défense faible","Frappe de la comète","Première frappe","Puissance absolue"], fcR:{"Tir de flèche d\'or":"Signature archer","Coup de pied de Pégase":"Signature Pégase polyvalent","Attaque puissante, défense faible":"+25% DGT infligés — boss killer","Frappe de la comète":"250% DGT-P AOE + étourdissement 3s à 20s","Première frappe":"+15% DGT-P/M 10s début — spike dégâts","Puissance absolue":"+VIT comp + DGT après chaque compétence CD ×3"}, bonds:[{n:"Héritage doré",a:["Seiya Odin"],e:"+20% DGT ATQ de base"}], note:"Jongler mêlée/distance — ultime boss +100% DGT." },
+
+  "Albérich de Megrez delta": { cl:"Support",row:"Médiane",fac:"Asgard", tags:["Invocation","Brûlure","Buff Asgard"], skills:[{n:"Harmonie entre le cosmos et l\'homme",t:"Ultime",d:"Invoque 2 Esprits + soigne tous + +100% VIT ATQ."},{n:"Taillade enflammée",t:"Éveil",d:"Feu permanent. Cône 85–100% DGT-M + Étourdissement sur brûlés."}], art:["Lyre d\'Apollon","Corne de Galar","Anneau du présage"], artR:{"Lyre d\'Apollon":"Buff musical Asgard","Corne de Galar":"Support Asgard","Anneau du présage":"Cosmos"}, fc:["Armure d\'Odin","Prière de Freya","Danse","Unis comme les doigts de la main","Jeune fille au milieu des fleurs","Le loup et le garçon"], fcR:{"Armure d\'Odin":"VIT ATQ × charges + taillade DGT-P — Esprits ATQ base synergy","Prière de Freya":"+20% soins +30% crit soin — support Asgard","Danse":"+4% crit +10% DGT crit × 5 cumuls début — Esprits","Unis comme les doigts de la main":"-80% DGT-P allié < 30%","Jeune fille au milieu des fleurs":"+8% VIT comp/ATQ sur allié soigné","Le loup et le garçon":"+15% DGT invocations — Esprits"}, bonds:[{n:"Coup d\'épée d\'Asgard",a:["Seiya Odin"],e:"+18% VIT ATQ"}], note:"Prioriser PV pour des Esprits plus résistants." },
+
+  "Hilda de Polaris": { cl:"Support",row:"Médiane",fac:"Asgard", tags:["Malédiction de lien","Debuff résistances","Terrain enneigé"], skills:[{n:"L\'anneau des Nibelungen",t:"Ultime",d:"100% DGT-M AOE + Malédiction lie 3→5 ennemis."},{n:"Royaume du givre",t:"Éveil",d:"Gel AOE 3,5s au début + terrain enneigé permanent."}], art:["Anneau des Nibelungen","Lance longue d\'Hilda","Corne de Galar"], artR:{"Anneau des Nibelungen":"Signature arme","Lance longue d\'Hilda":"Signature arme","Corne de Galar":"Asgard buff"}, fc:["Prière de Freya","Armure d\'Odin","Cadeau du dragon à deux têtes","Puissance du blizzard et de la tempête","Danse du Cygne","Le loup et le garçon"], fcR:{"Prière de Freya":"+20% soins +30% crit soin — signature Asgard","Armure d\'Odin":"VIT ATQ + taillade — Asgard ATQ base","Cadeau du dragon à deux têtes":"Soin tous alliés 8% PV max quand PV < 55%","Puissance du blizzard et de la tempête":"+5% PV max → DGT-P — terrain enneigé","Danse du Cygne":"+15% DGT glace — terrain enneigé synergy","Le loup et le garçon":"+15% DGT invocations"}, bonds:[{n:"Coupure dans la magie",a:["Seiya Odin"],e:"+10% DGT-P/M"}], note:"Malédiction de l\'anneau = debuff permanent toute la team." },
+
+  "Seiya Odin": { cl:"Combattant",row:"Avant",fac:"Asgard", tags:["ATQ de base scaling","Foudre proc","Immunité mort"], skills:[{n:"Pouvoir d\'Odin",t:"Ultime",d:"+65% DGT ATQ base 15s + 6 coups 100–120% DGT-P."},{n:"Taillade des étoiles invincibles",t:"Éveil",d:"Immunité mort → PV à 1 + 6 × 30% DGT-P."}], art:["Épée de Balmung","Corne de Galar","Dague d\'or"], artR:{"Épée de Balmung":"Asgard DGT","Corne de Galar":"Asgard buff","Dague d\'or":"VIT+crit"}, fc:["Armure d\'Odin","Envol de dragon","Cadeau du dragon à deux têtes","Puissance du blizzard et de la tempête","Le loup et le garçon","Frappe du dragon repenti"], fcR:{"Armure d\'Odin":"VIT ATQ ×20 charges + taillade ATQ base — SIGNATURE absolue","Envol de dragon":"+25% DEF-P → DGT-P toutes 2.5s — ATQ base passif","Cadeau du dragon à deux têtes":"Soin alliés 8% PV + purge CC","Puissance du blizzard et de la tempête":"+5% PV max → DGT-P — HP scaling","Frappe du dragon repenti":"+18% crit +30% DGT crit sous 50% PV","Rapide comme l\'éclair":"+35% VIT ATQ 20s — ATQ de base UNIQUEMENT"}, bonds:[{n:"Volonté héritée",a:["Seiya du Sagittaire"],e:"+20% DGT ATQ de base"}], note:"Armure d\'Odin = carte signature absolue — ATQ de base décuplées." },
+
+  "Siegfried de Dubhe alpha": { cl:"Tank",row:"Avant",fac:"Asgard", tags:["Boucle PV","Sustain extrême","Debuff DEF-P"], skills:[{n:"Blizzard du Dragon",t:"Ultime",d:"170–230% DGT-P + -70% VIT ATQ/comp 12s."},{n:"Corps immortel",t:"Passif",d:"À < 35% PV : 20→40% DGT convertis en soins."}], art:["Épée de Siegfried","Bouclier de Siegfried","Épée de Balmung"], artR:{"Épée de Siegfried":"DGT-P offensif","Bouclier de Siegfried":"Défense + sustain","Épée de Balmung":"Asgard"}, fc:["Dragon sans armure","Rugissement du dragon","Griffe du Dragon","Envol de dragon","Puissance du blizzard et de la tempête","Âme du dragon ascendant"], fcR:{"Dragon sans armure":"+8% ATQ -4% DEF — offensif Dragon","Rugissement du dragon":"+12% DGT ATQ base — Dragon","Griffe du Dragon":"Renversement + Super Armure quand PV < 30%","Envol de dragon":"+25% DEF-P → DGT-P toutes 2.5s — tank offensif","Puissance du blizzard et de la tempête":"+5% PV max → DGT-P — PV scaling","Âme du dragon ascendant":"Regen 0.8% PV max/s sous 50% PV — sustain"}, bonds:[{n:"Bataille dans la neige",a:["Shiryû éveillé"],e:"+10% résistance critique"},{n:"Chevalier dévoué",a:["Shura du Capricorne"],e:"+12% parade"}], note:"Corps immortel : DGT → soins = sustain extrême à faible PV." },
+
+  "Shiryû éveillé": { cl:"Combattant",row:"Avant",fac:"Sanctuaire", tags:["Counter Riposte","Vol de vie adaptatif"], skills:[{n:"Rugissement d\'Excalibur",t:"Ultime",d:"280–350% DGT-P × 3. Adaptatif Vol de vie / pénétration."},{n:"Protection d\'aura de Scale",t:"Éveil",d:"À < 35% PV : +50% Vol de vie. Permanent à 4★."}], art:["Épée de Siegfried","Bouclier du Dragon","Lance longue de la Balance"], artR:{"Épée de Siegfried":"DGT-P dragon","Bouclier du Dragon":"Défense Riposte","Lance longue de la Balance":"Pénétration"}, fc:["Dragon sans armure","Envol de dragon","Âme du dragon ascendant","Rugissement du dragon","Griffe du Dragon","Bouclier du Cosmos du Dragon"], fcR:{"Dragon sans armure":"+8% ATQ -4% DEF — Riposte DPS","Envol de dragon":"+25% DEF-P → DGT-P passif — tank DPS","Âme du dragon ascendant":"Regen 0.8% PV max/s sous 50% PV — Vol de vie adaptatif","Rugissement du dragon":"+12% DGT ATQ base","Griffe du Dragon":"CC clear + Super Armure quand PV < 30%","Bouclier du Cosmos du Dragon":"Signature bouclier Dragon"}, bonds:[{n:"Bataille dans la neige",a:["Siegfried de Dubhe alpha"],e:"+10% résistance critique"}], note:"Riposte = immunité totale 2s — Vol de vie permanent à 4★." },
+
+  "Surplis de Saga": { cl:"Mage",row:"Médiane",fac:"Sanctuaire", tags:["Étourdissement massif","Trou noir","Bouclier cumulable"], skills:[{n:"Explosion galactique",t:"Ultime",d:"175–315% DGT-P × 3 + refresh CD."},{n:"Défense dimensionnelle",t:"Éveil",d:"Après compétence → Bouclier 1→3 hits."}], art:["Anneau du présage","Dague d\'or","Épée de Damoclès"], artR:{"Anneau du présage":"Cosmos ATQ-M","Dague d\'or":"VIT+crit","Épée de Damoclès":"Exécution"}, fc:["Interdimensionnel","Puissance dimensionnelle","Voyageur dimensionnel","Majesté des Gémeaux","Rêve illusoire","Lueur cramoisie"], fcR:{"Interdimensionnel":"Stabilité + Rage après interdim — signature","Puissance dimensionnelle":"+25% DGT compétences + réduction CD interdim","Voyageur dimensionnel":"DGT-M % PV max sur ennemis en interdim + Vol de vie","Majesté des Gémeaux":"+15% ATQ + durée étourdissement +40%","Rêve illusoire":"+20% VIT ATQ + sosies sous 35% PV","Lueur cramoisie":"+2.4% VIT ATQ par Saignement ×15"}, bonds:[{n:"Conflit entre le bien et le mal",a:["Saga des Gémeaux"],e:"+20% VIT compétence"},{n:"Mort et résurrection",a:["Surplis de Shura","Surplis de Camus"],e:"+15% DGT finaux contre Sanctuaire"}], note:"Interdimensionnel core — boucliers passifs après chaque compétence." },
+
+  "Surplis de Shura": { cl:"Combattant",row:"Avant",fac:"Sanctuaire", tags:["Saignement","Esquive","Excalibur assassin"], skills:[{n:"Coup pointé d\'Excalibur",t:"Ultime",d:"80–100% DGT-P AOE + -15% réduction DGT-P cumulable."},{n:"Coup explosif d\'Excalibur",t:"Éveil",d:"+35% ATQ permanent + brise bouclier définitif."}], art:["Épée sainte","Épée de Damoclès","Dague d\'or"], artR:{"Épée sainte":"Excalibur","Épée de Damoclès":"Exécution","Dague d\'or":"VIT+crit"}, fc:["Messager d\'Excalibur","Héritage d\'Excalibur","Puissante Excalibur","Frappe contre","Guetter avant de frapper","Rose sanguine"], fcR:{"Messager d\'Excalibur":"+16% ATQ après kill — Excalibur assassin","Héritage d\'Excalibur":"+10% crit +20% DGT crit","Puissante Excalibur":"+25% DGT sur boucliers + brise armure","Frappe contre":"+10% parade + Vol de vie + DGT-P","Guetter avant de frapper":"Réduction DGT 32% + soin final","Rose sanguine":"Saignement → Vol de vie + VIT ATQ"}, bonds:[{n:"Or et ténèbres",a:["Shura du Capricorne"],e:"+8% parade + esquive"},{n:"Mort et résurrection",a:["Surplis de Saga","Surplis de Camus"],e:"+15% DGT finaux contre Sanctuaire"}], note:"Coup de tranche → Saignement → Coup tranchant chaîne." },
+
+  "Surplis de Camus": { cl:"Support",row:"Arrière",fac:"Sanctuaire", tags:["Gel","Protection d\'urgence","Exécution gelée"], skills:[{n:"Exécution aurorale",t:"Ultime",d:"200–300% DGT-M + Gel 8s + exécution si PV < 8%."},{n:"Cercueil congelé",t:"Passif",d:"Si allié < 25% PV → Gel protecteur 5s."}], art:["Sceau de perles scellées","Anneau de Pandore","Casque de l\'Empereur des mers"], artR:{"Sceau de perles scellées":"Amplifie Gel","Anneau de Pandore":"Contrôle","Casque de l\'Empereur des mers":"Défense"}, fc:["Âge glaciaire","Gel sanguin","Mage de givre","Énergie aurorale","Bouclier de givre","Danse du Cygne"], fcR:{"Âge glaciaire":"-10% DGT P/M + dissipe Super Armure/Stabilité via ultime","Gel sanguin":"Anti-soins sur gelés ×10 cumulable — punition","Mage de givre":"50% drain 100 Rage sur gel — Canopée synergy","Énergie aurorale":"+250 Rage alliés à 15s — ultime plus vite","Bouclier de givre":"Réduction DGT après gel — survivabilité","Danse du Cygne":"+15% DGT glace + purge gel propre"}, bonds:[{n:"Mort et résurrection",a:["Surplis de Saga","Surplis de Shura"],e:"+15% DGT finaux contre Sanctuaire"}], note:"Cercueil congelé = sauvetage automatique. Exécution instantanée à 7★." },
+
+  "Sorrento de la Sirène": { cl:"Support",row:"Arrière",fac:"Atlantide", tags:["Invocation","Soins","Étourdissement","Debuff DGT-P"], skills:[{n:"Dernière symphonie",t:"Ultime",d:"300–350% DGT-M × 5 + Étourdissement 6s + -50→100% DGT-P 12s."},{n:"Don spirituel",t:"Passif",d:"50→100% DGT Esprits → soins pour Sorrento. Invisible 8s si PV < 20%."}], art:["Sceptre de Niké","Lyre d\'Apollon","Anneau du présage"], artR:{"Sceptre de Niké":"Support/buff","Lyre d\'Apollon":"Buff musical — Esprits","Anneau du présage":"Cosmos ATQ-M"}, fc:["Mélodie de la Sirène","Mélodie éthérée","Guerrier de la beauté","Danse du Cygne","La prière de la jeune fille","Jeune fille au milieu des fleurs"], fcR:{"Mélodie de la Sirène":"Debuff DGT + counter étourdissement — signature Sorrento","Mélodie éthérée":"+esquive +Rage par esquive — survie","Guerrier de la beauté":"Durée Poison + anti-soins -soins ennemi","Danse du Cygne":"+15% DGT glace + purge gel propre","La prière de la jeune fille":"-80% DGT-M si PV < 30%","Jeune fille au milieu des fleurs":"+8% VIT comp/ATQ sur allié soigné"}, bonds:[{n:"Triade de l\'Atlantide",a:["Kanon du Dragon des Mers","Krishna de Chrysaor"],e:"+15% VIT + 25% réduction DGT 10s"},{n:"Destruction mutuelle",a:["Siegfried de Dubhe alpha"],e:"+20% soins"}], note:"Don spirituel : les Esprits soignent Sorrento passivement." },
+
+  "Marin de l\'Aigle": { cl:"Combattant",row:"Avant",fac:"Sanctuaire", tags:["ATQ de base scaling","VIT ATQ"], skills:[{n:"Serre de l\'aigle rapide",t:"Ultime",d:"224–280% DGT-P × 3 + scaling VIT ATQ +2%/5%."},{n:"Coup de pied d\'aigle",t:"Éveil",d:"20→50% chance → 80% DGT-P + +15% VIT ATQ cumulable infini."}], art:["Dague d\'or","Épée sainte","Brigaman"], artR:{"Dague d\'or":"VIT+crit scaling ultime","Épée sainte":"DGT-P ATQ de base","Brigaman":"Counter"}, fc:["Syd agile","Rapide comme l\'éclair","Attaque puissante, défense faible","Cosmos en lutte","Première frappe","Assaut extrême"], fcR:{"Syd agile":"VIT ATQ — signature build ATQ de base","Rapide comme l\'éclair":"+35% VIT ATQ 20s — IDÉAL ici car ATQ base pur. DGT compétences -50% mais Marin n\'en a pas besoin","Attaque puissante, défense faible":"+25% DGT infligés — ATQ de base","Cosmos en lutte":"+4% rupture — perce défenses","Première frappe":"+15% DGT-P 10s début — spike dégâts","Assaut extrême":"+20% esquive + DGT-P/M par esquive"}, bonds:[{n:"Femme Chevalier du Sanctuaire",a:["Shaina d\'Ophiuchus"],e:"+5% esquive + 5% VIT ATQ"}], note:"Rapide comme l\'éclair EST la carte idéale ici — tout le kit est ATQ de base." },
+
+  "Shaina d\'Ophiuchus": { cl:"Combattant",row:"Médiane",fac:"Sanctuaire", tags:["Poison","Esquive","Counter esquive","Debuff DEF-M"], skills:[{n:"Griffes du tonnerre",t:"Ultime",d:"90–150% DGT-M × 6 + -20→55% DEF-M 12s."},{n:"Frappe de l\'ombre du serpent tonnerre",t:"Éveil",d:"Après chaque esquive → 4 × 80→140% DGT-M + Invincible."}], art:["Anneau du présage","Dague d\'or","Épée de Damoclès"], artR:{"Anneau du présage":"Cosmos ATQ-M","Dague d\'or":"VIT+crit","Épée de Damoclès":"Exécution debuff"}, fc:["Frappe du Serpent","Rose épineuse","Esquive du serpent électrique","Pétrification de Méduse","Syd agile","Fleur mortelle"], fcR:{"Frappe du Serpent":"Vol de vie +8% ATQ par poison — soin passif par poison","Rose épineuse":"+30% effet Poison infligé — poison amplifié","Esquive du serpent électrique":"Signature esquive Shaina","Pétrification de Méduse":"-30% réduction DGT-P cible pétrifiée — synergie","Syd agile":"+VIT ATQ — esquives rapides","Fleur mortelle":"DGT bruts 15% PV max sur poison — finisseur"}, bonds:[{n:"Femme Chevalier du Sanctuaire",a:["Marin de l\'Aigle"],e:"+5% esquive + 5% VIT ATQ"}], note:"Esquive → contre-attaque invincible en boucle infinie." },
+
+  "Algol de Persée": { cl:"Tank",row:"Avant",fac:"Sanctuaire", tags:["Pétrification massive","Bouclier mental"], skills:[{n:"Visage démoniaque de la gorgone",t:"Ultime",d:"56–70% DGT-M AOE rangée médiane + Pétrification 3→4s."},{n:"Coup de pied pétrifiant",t:"Éveil",d:"Après Siège du serpent → 5 coups + Pétrification + Invincible."}], art:["Bouclier de la Méduse","Sceau de perles scellées","Anneau de Pandore"], artR:{"Bouclier de la Méduse":"Signature — Pétrification en étant attaqué","Sceau de perles scellées":"Amplifie Pétrification","Anneau de Pandore":"Contrôle CC"}, fc:["Bouclier de la Méduse","Pétrification de Méduse","Étreinte du ver","Étreinte du ver immobilisante","Suppression ultime","Labyrinthe fantôme"], fcR:{"Bouclier de la Méduse":"20% chance Pétrif en étant attaqué — contre-attaque passive","Pétrification de Méduse":"-30% réduction DGT-P cible pétrifiée — signature","Étreinte du ver":"-20% DGT P/M quand CC subi — protège Algol","Étreinte du ver immobilisante":"Capitulation sur immobilisation — contrôle","Suppression ultime":"-20% DGT ultime + drain Rage ennemi","Labyrinthe fantôme":"+4% esquive — survivabilité"}, bonds:[], note:"Pétrification dès ouverture + ultime + regard = contrôle permanent." },
+
+  "Chevalier de Cristal": { cl:"Support",row:"Médiane",fac:"Sanctuaire", tags:["Gel permanent","Bouclier mental","DGT bruts sur gelés"], skills:[{n:"Poussière de diamant",t:"Ultime",d:"88–120% DGT-M AOE rangée médiane + Gel 3→5s."},{n:"Froid polaire extrême",t:"Éveil",d:"+25→40% DGT givre permanent."}], art:["Sceau de perles scellées","Anneau de Pandore","Casque de l\'Empereur des mers"], artR:{"Sceau de perles scellées":"Amplifie Gel","Anneau de Pandore":"Contrôle CC","Casque de l\'Empereur des mers":"Défense"}, fc:["Âge glaciaire","Armure de Cristal","Bouclier de givre","Gel sanguin","Énergie aurorale","Esprit du givre"], fcR:{"Âge glaciaire":"-10% DGT P/M + dissipe Super Armure/Stabilité via ultime gel","Armure de Cristal":"+4% DEF-M — signature Cristal","Bouclier de givre":"Réduction DGT après chaque gel cumulable","Gel sanguin":"Anti-soins sur gelés ×10 cumulable — synergy Fragmentation","Énergie aurorale":"+250 Rage alliés à 15s — ultime plus souvent","Esprit du givre":"+30% crit sur gelés / +40% sur glacial — synergy parfaite"}, bonds:[], note:"Gel en boucle — Fragmentation atomique punit les gelés passivement." },
+
+  "Misty du Lézard": { cl:"Support",row:"Médiane",fac:"Sanctuaire", tags:["Bouclier DGT-M équipe","Soins sur bouclier"], skills:[{n:"Mur de défense aérienne",t:"Ultime",d:"Bouclier DGT-M 100→130% ATQ sur tous les alliés 10s."},{n:"Garde tourbillonnante",t:"Éveil",d:"Bouclier 3→6 hits sur allié PV le plus bas + soin 80% ATQ."}], art:["Bouclier d\'Athéna","Sceptre de Niké","La jarre sacrée"], artR:{"Bouclier d\'Athéna":"Renforce boucliers","Sceptre de Niké":"Support","La jarre sacrée":"Soins"}, fc:["Mur invisible","Mur de défense aérienne","Défense préparée","Position défensive","Bouclier de parade","Unis comme les doigts de la main"], fcR:{"Mur invisible":"Signature défense Misty — bouclier passif","Mur de défense aérienne":"Bouclier 140% ATQ si PV < 20% — urgence","Défense préparée":"Réduction DGT P/M au début de combat","Position défensive":"+10% DEF-P permanent","Bouclier de parade":"+4% parade — défense polyvalente","Unis comme les doigts de la main":"-80% DGT-P allié < 30%"}, bonds:[{n:"À trois, c\'est trop",a:["Moses","Astérion"],e:"+20% soins reçus"}], note:"Ruisseau guérisseur : soins passifs continus tant que bouclier actif." },
+
+  "Bud d\'Alcor zeta": { cl:"Combattant",row:"Médiane",fac:"Asgard", tags:["Possession","Scaling Hâte","Invisible"], skills:[{n:"Griffes de tigre viking sombre",t:"Ultime",d:"270–330% DGT-P × 6. +100% sur gelés à 4★."},{n:"Compagnon tigre de l\'ombre",t:"Éveil",d:"+50→80% DGT crit permanent."}], art:["Dague d\'or","Épée de Balmung","Corne de Galar"], artR:{"Dague d\'or":"VIT+crit stacks Hâte","Épée de Balmung":"Asgard DGT","Corne de Galar":"Asgard buff"}, fc:["Le loup et le garçon","Syd agile","Intention meurtrière","Volonté meurtrière","Opération secrète","Forêt brumeuse"], fcR:{"Le loup et le garçon":"+15% DGT invocations — possession compte comme invocation","Syd agile":"VIT ATQ — burst post-possession","Intention meurtrière":"+30% DGT sans prendre DGT — parfait en invisible","Volonté meurtrière":"+12% esquive + invisibilité après esquive","Opération secrète":"+16% DGT en invisibilité — burst sortie possession","Forêt brumeuse":"+10% esquive + invisible 10s début"}, bonds:[{n:"Souvenirs douloureux",a:["Mime"],e:"+8% esquive + crit"}], note:"Possession 30s → sortie avec burst de vitesse (×6 Hâte max) + invisible 10s." }
+};
+
+const FAC_COLORS = { Sanctuaire:0xFFD700, Atlantide:0x0099FF, Enfers:0x9B59B6, Asgard:0x1ABC9C, Autre:0x95A5A6 };
+const CL_EMOJI = { Combattant:"⚔️", Tank:"🛡️", Support:"💚", Mage:"🔮", Archer:"🏹" };
+const SK_EMOJI = { Base:"▫️", Ultime:"🌟", Cycle:"🔄", Passif:"✨", Éveil:"💫", Qualité:"🔴", Ouverture:"⚡", Recharge:"⏱️" };
+
+function getHero(name) {
+  if (DB[name]) return { name, data: DB[name] };
+  const lower = name.toLowerCase();
+  const found = Object.keys(DB).find(k => k.toLowerCase().includes(lower));
+  if (found) return { name: found, data: DB[found] };
+  return null;
 }
+function getAllHeroes() { return Object.keys(DB); }
+function getHeroesByFaction(fac) { return Object.keys(DB).filter(k => DB[k].fac === fac); }
+function getHeroesByClass(cl) { return Object.keys(DB).filter(k => DB[k].cl === cl); }
 
-// ── BUILD EMBED ────────────────────────────────────────────
-function buildBuildEmbed(heroName, hero, userCollection) {
-  const color = FAC_COLORS[hero.fac] || 0x95A5A6;
-  const ownedArt = new Set(userCollection.artifacts);
-  const ownedFC = new Set(userCollection.fc);
-  const ownedHeroes = new Set(userCollection.heroes);
-
-  const embed = new EmbedBuilder()
-    .setColor(color)
-    .setTitle(`🔧 Build · ${heroName}`)
-    .setDescription(`**${hero.cl}** · ${hero.row} · ${hero.fac}`)
-    .setFooter({ text: 'Saint Seiya Rebirth 2 EX · ✅ = dans ta collection' });
-
-  // Artifacts
-  const sortedArt = sortByOwned(hero.art, ownedArt);
-  const anyArtOwned = sortedArt.some(n => ownedArt.has(n));
-  const artText = sortedArt.map((n, i) => {
-    const owned = ownedArt.has(n);
-    const icon = owned ? '✅' : '⬜';
-    const reason = hero.artR[n] || '';
-    return `${icon} **${i + 1}.** ${n}\n*${reason}*`;
-  }).join('\n');
-
-  embed.addFields({
-    name: `🗡️ Artifacts${anyArtOwned ? ' · ✅ Build dispo !' : ''}`,
-    value: artText.slice(0, 1024),
-    inline: false,
-  });
-
-  // Ultimate Powers
-  const sortedFC = sortByOwned(hero.fc, ownedFC);
-  const anyFCOwned = sortedFC.some(n => ownedFC.has(n));
-  const fcText = sortedFC.map((n, i) => {
-    const owned = ownedFC.has(n);
-    const icon = owned ? '✅' : '⬜';
-    const reason = hero.fcR[n] || '';
-    return `${icon} **${i + 1}.** ${n}\n*${reason}*`;
-  }).join('\n');
-
-  embed.addFields({
-    name: `⚡ Ultimate Powers${anyFCOwned ? ' · ✅ Build dispo !' : ''}`,
-    value: fcText.slice(0, 1024),
-    inline: false,
-  });
-
-  // Bonds
-  if (hero.bonds && hero.bonds.length) {
-    const bondText = hero.bonds.map(b => {
-      const active = b.a.every(a => ownedHeroes.has(a));
-      const icon = active ? '✅' : '❌';
-      const allies = b.a.map(a => ownedHeroes.has(a) ? `✅${a}` : `❌${a}`).join(', ');
-      return `${icon} **${b.n}**\navec ${allies}\n→ ${b.e}`;
-    }).join('\n\n');
-    embed.addFields({ name: '🔗 Bonds', value: bondText.slice(0, 1024), inline: false });
-  }
-
-  return embed;
-}
-
-// ── COLLECTION EMBED ───────────────────────────────────────
-function buildCollectionEmbed(userId, collection) {
-  const embed = new EmbedBuilder()
-    .setColor(0x378ADD)
-    .setTitle('📦 Ta collection')
-    .setFooter({ text: `Utilisateur ${userId}` });
-
-  embed.addFields(
-    { name: '⚔️ Héros', value: collection.heroes.length ? collection.heroes.join(', ').slice(0, 1024) : '*Aucun héros enregistré*', inline: false },
-    { name: '🗡️ Artifacts', value: `${collection.artifacts.length}/41 possédés`, inline: true },
-    { name: '⚡ Ultimate Powers', value: `${collection.fc.length}/165 possédés`, inline: true },
-  );
-
-  return embed;
-}
-
-// ── FACTION EMBED ──────────────────────────────────────────
-function buildFactionEmbed(fac, heroes, userHeroes) {
-  const color = FAC_COLORS[fac] || 0x95A5A6;
-  const owned = new Set(userHeroes);
-
-  const embed = new EmbedBuilder()
-    .setColor(color)
-    .setTitle(`🏛️ Faction : ${fac}`)
-    .setDescription(`${heroes.length} héros complets dans la base`)
-    .setFooter({ text: 'Saint Seiya Rebirth 2 EX · ✅ = dans ta collection' });
-
-  const heroText = heroes.map(n => `${owned.has(n) ? '✅' : '⬜'} ${n}`).join('\n');
-  embed.addFields({ name: 'Héros', value: heroText.slice(0, 1024) || '*Aucun*', inline: false });
-
-  return embed;
-}
-
-// ── BONDS EMBED ────────────────────────────────────────────
-function buildBondsEmbed(heroName, hero, userHeroes) {
-  const color = FAC_COLORS[hero.fac] || 0x95A5A6;
-  const owned = new Set(userHeroes);
-
-  const embed = new EmbedBuilder()
-    .setColor(color)
-    .setTitle(`🔗 Bonds · ${heroName}`)
-    .setFooter({ text: 'Saint Seiya Rebirth 2 EX · ✅ actif / ❌ incomplet' });
-
-  const bonds = [...(hero.bonds || []), ...(hero.combos || [])];
-
-  if (!bonds.length) {
-    embed.setDescription('Aucun bond enregistré pour ce héros.');
-    return embed;
-  }
-
-  bonds.forEach(b => {
-    const active = b.a.every(a => owned.has(a));
-    const icon = active ? '✅ ACTIF' : '❌ Incomplet';
-    const allies = b.a.map(a => `${owned.has(a) ? '✅' : '❌'} ${a}`).join('\n');
-    embed.addFields({
-      name: `${icon} · ${b.n}`,
-      value: `${allies}\n→ **${b.e}**`,
-      inline: false,
-    });
-  });
-
-  return embed;
-}
-
-// ── LISTE EMBED ────────────────────────────────────────────
-function buildListeEmbed(heroes) {
-  const embed = new EmbedBuilder()
-    .setColor(0x378ADD)
-    .setTitle('📋 Héros disponibles dans la base')
-    .setDescription(`${heroes.length} héros complets enregistrés`)
-    .setFooter({ text: 'Saint Seiya Rebirth 2 EX · Utilise /hero <nom> pour la fiche complète' });
-
-  // Grouper par faction
-  const byFac = {};
-  heroes.forEach(({ name, data }) => {
-    if (!byFac[data.fac]) byFac[data.fac] = [];
-    byFac[data.fac].push(name);
-  });
-
-  Object.entries(byFac).forEach(([fac, names]) => {
-    embed.addFields({ name: `🏛️ ${fac}`, value: names.join(', ').slice(0, 1024), inline: false });
-  });
-
-  return embed;
-}
-
-module.exports = { buildHeroEmbed, buildBuildEmbed, buildCollectionEmbed, buildFactionEmbed, buildBondsEmbed, buildListeEmbed };
+module.exports = { DB, FAC_COLORS, CL_EMOJI, SK_EMOJI, getHero, getAllHeroes, getHeroesByFaction, getHeroesByClass };
