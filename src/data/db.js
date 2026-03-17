@@ -1,74 +1,72 @@
-const { MongoClient } = require('mongodb');
+const fs = require('fs');
+const path = require('path');
 
-const uri = process.env.MONGODB_URI;
-let client = null;
-let db = null;
+// /app/data est le volume persistant Railway
+// En local, utilise le dossier data/ du projet
+const dataDir = process.env.RAILWAY_VOLUME_MOUNT_PATH
+  ? path.join(process.env.RAILWAY_VOLUME_MOUNT_PATH)
+  : path.join(__dirname, '../../../data');
 
-async function connect() {
-  if (db) return db;
-  client = new MongoClient(uri);
-  await client.connect();
-  db = client.db('seiya-bot');
-  console.log('✅ MongoDB connecté');
-  return db;
+const dbPath = path.join(dataDir, 'collections.json');
+
+if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
+
+function load() {
+  try {
+    if (fs.existsSync(dbPath)) return JSON.parse(fs.readFileSync(dbPath, 'utf8'));
+  } catch (e) { console.error('Erreur lecture collections.json:', e); }
+  return {};
 }
 
-function col() {
-  return db.collection('collections');
+function save(data) {
+  try { fs.writeFileSync(dbPath, JSON.stringify(data, null, 2), 'utf8'); }
+  catch (e) { console.error('Erreur écriture collections.json:', e); }
 }
 
-// ── FONCTIONS PUBLIQUES ───────────────────────────────────
-
-async function addItem(userId, type, name) {
-  await connect();
-  await col().updateOne(
-    { userId },
-    { $addToSet: { [type]: name } },
-    { upsert: true }
-  );
+function getUser(data, userId) {
+  if (!data[userId]) data[userId] = { hero: [], art: [], fc: [] };
+  return data[userId];
 }
 
-async function removeItem(userId, type, name) {
-  await connect();
-  await col().updateOne(
-    { userId },
-    { $pull: { [type]: name } }
-  );
+function addItem(userId, type, name) {
+  const data = load();
+  const user = getUser(data, userId);
+  if (!user[type].includes(name)) user[type].push(name);
+  save(data);
 }
 
-async function hasItem(userId, type, name) {
-  await connect();
-  const doc = await col().findOne({ userId, [type]: name });
-  return !!doc;
+function removeItem(userId, type, name) {
+  const data = load();
+  const user = getUser(data, userId);
+  user[type] = user[type].filter(n => n !== name);
+  save(data);
 }
 
-async function getUserItems(userId, type) {
-  await connect();
-  const doc = await col().findOne({ userId });
-  return doc ? (doc[type] || []) : [];
+function hasItem(userId, type, name) {
+  return getUser(load(), userId)[type].includes(name);
 }
 
-async function getUserCollection(userId) {
-  await connect();
-  const doc = await col().findOne({ userId }) || {};
-  return {
-    heroes: doc.hero || [],
-    artifacts: doc.art || [],
-    fc: doc.fc || [],
-  };
+function getUserItems(userId, type) {
+  return getUser(load(), userId)[type] || [];
 }
 
-async function clearUserCollection(userId, type = null) {
-  await connect();
-  if (type) {
-    await col().updateOne({ userId }, { $set: { [type]: [] } });
-  } else {
-    await col().deleteOne({ userId });
-  }
+function getUserCollection(userId) {
+  const user = getUser(load(), userId);
+  return { heroes: user.hero || [], artifacts: user.art || [], fc: user.fc || [] };
+}
+
+function clearUserCollection(userId, type = null) {
+  const data = load();
+  if (!data[userId]) return;
+  if (type) data[userId][type] = [];
+  else data[userId] = { hero: [], art: [], fc: [] };
+  save(data);
 }
 
 function sortByOwned(items, ownedSet) {
   return [...items].sort((a, b) => (ownedSet.has(a) ? 0 : 1) - (ownedSet.has(b) ? 0 : 1));
 }
 
-module.exports = { connect, addItem, removeItem, hasItem, getUserItems, getUserCollection, clearUserCollection, sortByOwned };
+console.log(`📁 Collections stockées dans : ${dbPath}`);
+
+module.exports = { addItem, removeItem, hasItem, getUserItems, getUserCollection, clearUserCollection, sortByOwned };
