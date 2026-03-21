@@ -263,21 +263,22 @@ function scoreFCCard(fcName, heroProfile, recoList) {
 }
 
 function getBestFromCollection(hero, ownedArt, ownedFC) {
-  const profile = getHeroProfile(hero);
+  // Utiliser le classement top15/top30 stocké dans heroes.js
+  // Parcourir dans l'ordre du classement et garder ceux possédés
+  const art15 = hero.art15 || hero.art || [];
+  const fc30 = hero.fc30 || hero.fc || [];
 
-  // Artefacts : recommandés officiels en premier, puis compatibles par score
-  const scoredArt = [...ownedArt]
-    .map(a => ({ name: a, score: scoreArtifact(a, profile, hero.art || []) }))
-    .sort((a, b) => b.score - a.score)
-    .slice(0, 3);
+  const availableArt = art15
+    .filter(a => ownedArt.has(a))
+    .slice(0, 3)
+    .map(a => ({ name: a, inReco: (hero.art || []).includes(a) }));
 
-  // FC : recommandées officielles en premier, puis compatibles par score
-  const scoredFC = [...ownedFC]
-    .map(f => ({ name: f, score: scoreFCCard(f, profile, hero.fc || []) }))
-    .sort((a, b) => b.score - a.score)
-    .slice(0, 6);
+  const availableFC = fc30
+    .filter(f => ownedFC.has(f))
+    .slice(0, 6)
+    .map(f => ({ name: f, inReco: (hero.fc || []).includes(f) }));
 
-  return { art: scoredArt, fc: scoredFC };
+  return { art: availableArt, fc: availableFC };
 }
 
 // ── BUILD EMBED ────────────────────────────────────────────
@@ -345,12 +346,11 @@ function buildBuildEmbed(heroName, hero, userCollection) {
   // Artefacts compatibles depuis la collection
   const artAvailText = best.art.length
     ? best.art.map((a, i) => {
-        // Vérifier si c'est dans les recommandés officiels
-        const isReco = hero.art.includes(a.name);
-        const reason = isReco ? (hero.artR[a.name] || '') : `Compatibilité: ${a.score > 0 ? 'bonne' : 'générale'}`;
-        return `✅ **${i + 1}.** ${a.name}${isReco ? ' ⭐' : ''}\n*${reason}*`;
+        const reason = a.inReco ? (hero.artR[a.name] || '') : '';
+        const star = a.inReco ? ' ⭐' : '';
+        return `✅ **${i + 1}.** ${a.name}${star}${reason ? '\n*' + reason + '*' : ''}`;
       }).join('\n')
-    : '*Aucun artefact dans ta collection*';
+    : '*Aucun artefact compatible dans ta collection*';
 
   embed2.addFields({
     name: `🗡️ Artefacts · Options selon ta collection`,
@@ -358,14 +358,13 @@ function buildBuildEmbed(heroName, hero, userCollection) {
     inline: false,
   });
 
-  // Cartes FC compatibles depuis la collection
   const fcAvailText = best.fc.length
     ? best.fc.map((f, i) => {
-        const isReco = hero.fc.includes(f.name);
-        const reason = isReco ? (hero.fcR[f.name] || '') : `Compatibilité: ${f.score > 0 ? 'bonne' : 'générale'}`;
-        return `✅ **${i + 1}.** ${f.name}${isReco ? ' ⭐' : ''}\n*${reason}*`;
+        const reason = f.inReco ? (hero.fcR[f.name] || '') : '';
+        const star = f.inReco ? ' ⭐' : '';
+        return `✅ **${i + 1}.** ${f.name}${star}${reason ? '\n*' + reason + '*' : ''}`;
       }).join('\n')
-    : '*Aucune carte dans ta collection*';
+    : '*Aucune carte compatible dans ta collection*';
 
   embed2.addFields({
     name: `⚡ Ultimate Powers · Options selon ta collection`,
