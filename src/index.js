@@ -68,7 +68,7 @@ client.on('interactionCreate', async interaction => {
       const result = getHero(nom);
       if (!result) return interaction.editReply(`❌ Héros introuvable : **${nom}**`);
       const collection = getUserCollection(user.id);
-      return interaction.editReply({ embeds: [buildBuildEmbed(result.name, result.data, collection)] });
+      return interaction.editReply({ embeds: buildBuildEmbed(result.name, result.data, collection) });
     }
 
     if (commandName === 'collection') {

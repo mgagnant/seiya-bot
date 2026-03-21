@@ -47,41 +47,40 @@ function buildBuildEmbed(heroName, hero, userCollection) {
   const ownedArt = new Set(userCollection.artifacts);
   const ownedFC = new Set(userCollection.fc);
   const ownedHeroes = new Set(userCollection.heroes);
+  const desc = `**${hero.cl}** · ${hero.row} · ${hero.fac}`;
+  const footer = { text: 'Saint Seiya Rebirth 2 EX · ✅ = dans ta collection' };
 
-  const embed = new EmbedBuilder()
+  // ── EMBED 1 : Meilleures options ──────────────────────────
+  const embed1 = new EmbedBuilder()
     .setColor(color)
     .setTitle(`🔧 Build · ${heroName}`)
-    .setDescription(`**${hero.cl}** · ${hero.row} · ${hero.fac}`)
-    .setFooter({ text: 'Saint Seiya Rebirth 2 EX · ✅ = dans ta collection' });
+    .setDescription(desc)
+    .setFooter(footer);
 
-  // Artifacts
-  const sortedArt = sortByOwned(hero.art, ownedArt);
-  const anyArtOwned = sortedArt.some(n => ownedArt.has(n));
-  const artText = sortedArt.map((n, i) => {
+  // Artifacts — ordre recommandé, ✅ si possédé
+  const anyArtOwned = hero.art.some(n => ownedArt.has(n));
+  const artText = hero.art.map((n, i) => {
     const owned = ownedArt.has(n);
-    const icon = owned ? '✅' : '⬜';
     const reason = hero.artR[n] || '';
-    return `${icon} **${i + 1}.** ${n}\n*${reason}*`;
+    return `${owned ? '✅' : '⬜'} **${i + 1}.** ${n}\n*${reason}*`;
   }).join('\n');
 
-  embed.addFields({
-    name: `🗡️ Artifacts${anyArtOwned ? ' · ✅ Build dispo !' : ''}`,
+  embed1.addFields({
+    name: `🗡️ Artefacts · Meilleures options${anyArtOwned ? ' · ✅ Build dispo !' : ''}`,
     value: artText.slice(0, 1024),
     inline: false,
   });
 
-  // Ultimate Powers
-  const sortedFC = sortByOwned(hero.fc, ownedFC);
-  const anyFCOwned = sortedFC.some(n => ownedFC.has(n));
-  const fcText = sortedFC.map((n, i) => {
+  // Ultimate Powers — ordre recommandé, ✅ si possédé
+  const anyFCOwned = hero.fc.some(n => ownedFC.has(n));
+  const fcText = hero.fc.map((n, i) => {
     const owned = ownedFC.has(n);
-    const icon = owned ? '✅' : '⬜';
     const reason = hero.fcR[n] || '';
-    return `${icon} **${i + 1}.** ${n}\n*${reason}*`;
+    return `${owned ? '✅' : '⬜'} **${i + 1}.** ${n}\n*${reason}*`;
   }).join('\n');
 
-  embed.addFields({
-    name: `⚡ Ultimate Powers${anyFCOwned ? ' · ✅ Build dispo !' : ''}`,
+  embed1.addFields({
+    name: `⚡ Ultimate Powers · Meilleures options${anyFCOwned ? ' · ✅ Build dispo !' : ''}`,
     value: fcText.slice(0, 1024),
     inline: false,
   });
@@ -94,10 +93,58 @@ function buildBuildEmbed(heroName, hero, userCollection) {
       const allies = b.a.map(a => ownedHeroes.has(a) ? `✅${a}` : `❌${a}`).join(', ');
       return `${icon} **${b.n}**\navec ${allies}\n→ ${b.e}`;
     }).join('\n\n');
-    embed.addFields({ name: '🔗 Bonds', value: bondText.slice(0, 1024), inline: false });
+    embed1.addFields({ name: '🔗 Bonds', value: bondText.slice(0, 1024), inline: false });
   }
 
-  return embed;
+  // ── EMBED 2 : Options disponibles selon ta collection ─────
+  const embed2 = new EmbedBuilder()
+    .setColor(color)
+    .setTitle(`🔧 Build · ${heroName}`)
+    .setDescription(desc)
+    .setFooter(footer);
+
+  // Artefacts possédés parmi les recommandés (même ordre de priorité)
+  const availableArt = hero.art.filter(n => ownedArt.has(n));
+  const artAvailText = availableArt.length
+    ? availableArt.map((n, i) => {
+        const reason = hero.artR[n] || '';
+        return `✅ **${i + 1}.** ${n}\n*${reason}*`;
+      }).join('\n')
+    : '*Aucun artefact recommandé dans ta collection*';
+
+  embed2.addFields({
+    name: `🗡️ Artefacts · Options disponibles selon ta collection`,
+    value: artAvailText.slice(0, 1024),
+    inline: false,
+  });
+
+  // FC possédées parmi les recommandées (même ordre de priorité)
+  const availableFC = hero.fc.filter(n => ownedFC.has(n));
+  const fcAvailText = availableFC.length
+    ? availableFC.map((n, i) => {
+        const reason = hero.fcR[n] || '';
+        return `✅ **${i + 1}.** ${n}\n*${reason}*`;
+      }).join('\n')
+    : '*Aucune carte recommandée dans ta collection*';
+
+  embed2.addFields({
+    name: `⚡ Ultimate Powers · Options disponibles selon ta collection`,
+    value: fcAvailText.slice(0, 1024),
+    inline: false,
+  });
+
+  // Bonds (même dans le 2ème embed)
+  if (hero.bonds && hero.bonds.length) {
+    const bondText = hero.bonds.map(b => {
+      const active = b.a.every(a => ownedHeroes.has(a));
+      const icon = active ? '✅' : '❌';
+      const allies = b.a.map(a => ownedHeroes.has(a) ? `✅${a}` : `❌${a}`).join(', ');
+      return `${icon} **${b.n}**\navec ${allies}\n→ ${b.e}`;
+    }).join('\n\n');
+    embed2.addFields({ name: '🔗 Bonds', value: bondText.slice(0, 1024), inline: false });
+  }
+
+  return [embed1, embed2];
 }
 
 // ── COLLECTION EMBED ───────────────────────────────────────
