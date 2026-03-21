@@ -20,7 +20,10 @@ module.exports = [
   new SlashCommandBuilder()
     .setName('collection')
     .setDescription('Affiche ou modifie ta collection personnelle')
-    .addSubcommand(sub => sub.setName('voir').setDescription('Voir ta collection'))
+    .addSubcommand(sub => sub.setName('voir').setDescription('Voir toute ta collection'))
+    .addSubcommand(sub => sub.setName('heros').setDescription('Voir tes héros possédés'))
+    .addSubcommand(sub => sub.setName('artefacts').setDescription('Voir tes artefacts possédés'))
+    .addSubcommand(sub => sub.setName('pouvoirs').setDescription('Voir tes Ultimate Powers possédés'))
     .addSubcommand(sub =>
       sub.setName('ajouter').setDescription("Ajouter un item à ta collection")
         .addStringOption(opt => opt.setName('type').setDescription("Type d'item").setRequired(true)

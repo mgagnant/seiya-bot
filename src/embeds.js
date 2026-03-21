@@ -101,18 +101,83 @@ function buildBuildEmbed(heroName, hero, userCollection) {
 }
 
 // ── COLLECTION EMBED ───────────────────────────────────────
-function buildCollectionEmbed(userId, collection) {
+function buildCollectionEmbed(userId, collection, section) {
   const embed = new EmbedBuilder()
     .setColor(0x378ADD)
     .setTitle('📦 Ta collection')
-    .setFooter({ text: `Utilisateur ${userId}` });
+    .setFooter({ text: 'Saint Seiya Rebirth 2 EX · ✅ = dans ta collection' });
 
-  embed.addFields(
-    { name: '⚔️ Héros', value: collection.heroes.length ? collection.heroes.join(', ').slice(0, 1024) : '*Aucun héros enregistré*', inline: false },
-    { name: '🗡️ Artifacts', value: `${collection.artifacts.length}/41 possédés`, inline: true },
-    { name: '⚡ Ultimate Powers', value: `${collection.fc.length}/165 possédés`, inline: true },
-  );
+  const heroCount = collection.heroes.length;
+  const artCount = collection.artifacts.length;
+  const fcCount = collection.fc.length;
 
+  // Section héros
+  if (!section || section === 'heroes') {
+    const heroText = heroCount
+      ? collection.heroes.join(', ').slice(0, 1024)
+      : '*Aucun héros enregistré*';
+    embed.addFields({ name: `⚔️ Héros · ${heroCount} possédés`, value: heroText, inline: false });
+  }
+
+  // Section artefacts
+  if (!section || section === 'artifacts') {
+    if (artCount === 0) {
+      embed.addFields({ name: `🗡️ Artefacts · 0 possédés`, value: '*Aucun artefact enregistré*', inline: false });
+    } else {
+      // Grouper par tranches de 1024 chars si nécessaire
+      const artText = collection.artifacts.join(', ');
+      if (artText.length <= 1024) {
+        embed.addFields({ name: `🗡️ Artefacts · ${artCount} possédés`, value: artText, inline: false });
+      } else {
+        // Découper en chunks
+        const chunks = [];
+        let current = '';
+        for (const a of collection.artifacts) {
+          if ((current + ', ' + a).length > 1020) {
+            chunks.push(current);
+            current = a;
+          } else {
+            current = current ? current + ', ' + a : a;
+          }
+        }
+        if (current) chunks.push(current);
+        embed.addFields({ name: `🗡️ Artefacts · ${artCount} possédés`, value: chunks[0], inline: false });
+        for (let i = 1; i < Math.min(chunks.length, 3); i++) {
+          embed.addFields({ name: '​', value: chunks[i], inline: false });
+        }
+      }
+    }
+  }
+
+  // Section Ultimate Powers
+  if (!section || section === 'fc') {
+    if (fcCount === 0) {
+      embed.addFields({ name: `⚡ Ultimate Powers · 0 possédés`, value: '*Aucune carte enregistrée*', inline: false });
+    } else {
+      const fcText = collection.fc.join(', ');
+      if (fcText.length <= 1024) {
+        embed.addFields({ name: `⚡ Ultimate Powers · ${fcCount} possédés`, value: fcText, inline: false });
+      } else {
+        const chunks = [];
+        let current = '';
+        for (const f of collection.fc) {
+          if ((current + ', ' + f).length > 1020) {
+            chunks.push(current);
+            current = f;
+          } else {
+            current = current ? current + ', ' + f : f;
+          }
+        }
+        if (current) chunks.push(current);
+        embed.addFields({ name: `⚡ Ultimate Powers · ${fcCount} possédés`, value: chunks[0], inline: false });
+        for (let i = 1; i < Math.min(chunks.length, 3); i++) {
+          embed.addFields({ name: '​', value: chunks[i], inline: false });
+        }
+      }
+    }
+  }
+
+  embed.addFields({ name: '​', value: `Utilisateur ${userId}`, inline: false });
   return embed;
 }
 

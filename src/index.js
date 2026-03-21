@@ -75,7 +75,19 @@ client.on('interactionCreate', async interaction => {
       const sub = interaction.options.getSubcommand();
       if (sub === 'voir') {
         const collection = getUserCollection(user.id);
-        return interaction.editReply({ embeds: [buildCollectionEmbed(user.id, collection)] });
+        return interaction.editReply({ embeds: [buildCollectionEmbed(user.id, collection, null)] });
+      }
+      if (sub === 'heros') {
+        const collection = getUserCollection(user.id);
+        return interaction.editReply({ embeds: [buildCollectionEmbed(user.id, collection, 'heroes')] });
+      }
+      if (sub === 'artefacts') {
+        const collection = getUserCollection(user.id);
+        return interaction.editReply({ embeds: [buildCollectionEmbed(user.id, collection, 'artifacts')] });
+      }
+      if (sub === 'pouvoirs') {
+        const collection = getUserCollection(user.id);
+        return interaction.editReply({ embeds: [buildCollectionEmbed(user.id, collection, 'fc')] });
       }
       if (sub === 'ajouter') {
         const type = interaction.options.getString('type');
