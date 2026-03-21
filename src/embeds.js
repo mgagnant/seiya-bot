@@ -240,19 +240,22 @@ function getHeroProfile(hero) {
   return profile;
 }
 
-function scoreArtifact(artName, heroProfile) {
+function scoreArtifact(artName, heroProfile, recoList) {
   const artTags = ART_TAGS[artName] || [];
   let score = 0;
+  // Bonus massif si dans les recommandés officiels — priorité absolue
+  if (recoList.includes(artName)) score += 100;
   for (const tag of artTags) {
     if (heroProfile.has(tag)) score += 2;
   }
-  // Pénalité légère si aucune correspondance
   return score;
 }
 
-function scoreFCCard(fcName, heroProfile) {
+function scoreFCCard(fcName, heroProfile, recoList) {
   const fcTags = FC_TAGS[fcName] || [];
   let score = 0;
+  // Bonus massif si dans les recommandées officielles — priorité absolue
+  if (recoList.includes(fcName)) score += 100;
   for (const tag of fcTags) {
     if (heroProfile.has(tag)) score += 2;
   }
@@ -262,15 +265,15 @@ function scoreFCCard(fcName, heroProfile) {
 function getBestFromCollection(hero, ownedArt, ownedFC) {
   const profile = getHeroProfile(hero);
 
-  // Trier les artefacts possédés par score de compatibilité
+  // Artefacts : recommandés officiels en premier, puis compatibles par score
   const scoredArt = [...ownedArt]
-    .map(a => ({ name: a, score: scoreArtifact(a, profile) }))
+    .map(a => ({ name: a, score: scoreArtifact(a, profile, hero.art || []) }))
     .sort((a, b) => b.score - a.score)
     .slice(0, 3);
 
-  // Trier les cartes FC possédées par score de compatibilité
+  // FC : recommandées officielles en premier, puis compatibles par score
   const scoredFC = [...ownedFC]
-    .map(f => ({ name: f, score: scoreFCCard(f, profile) }))
+    .map(f => ({ name: f, score: scoreFCCard(f, profile, hero.fc || []) }))
     .sort((a, b) => b.score - a.score)
     .slice(0, 6);
 
