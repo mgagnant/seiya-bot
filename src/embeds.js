@@ -12,6 +12,7 @@ function buildHeroEmbed(heroName, hero) {
     .setTitle(`${emoji} ${heroName}`)
     .setDescription(`**${hero.cl}** · ${hero.row} · ${hero.fac}`)
     .setFooter({ text: 'Saint Seiya Rebirth 2 EX · /build pour les recommandations' });
+  if (hero.img) embed.setThumbnail(hero.img);
 
   // Tags
   if (hero.tags && hero.tags.length) {
@@ -296,6 +297,7 @@ function buildBuildEmbed(heroName, hero, userCollection) {
     .setTitle(`🔧 Build · ${heroName}`)
     .setDescription(desc)
     .setFooter(footer);
+  if (hero.img) embed1.setThumbnail(hero.img);
 
   const anyArtOwned = hero.art.some(n => ownedArt.has(n));
   const artText = hero.art.map((n, i) => {
@@ -340,6 +342,7 @@ function buildBuildEmbed(heroName, hero, userCollection) {
     .setTitle(`🔧 Build · ${heroName}`)
     .setDescription(desc)
     .setFooter(footer);
+  if (hero.img) embed2.setThumbnail(hero.img);
 
   const best = getBestFromCollection(hero, ownedArt, ownedFC);
 
