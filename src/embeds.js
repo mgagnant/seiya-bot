@@ -485,7 +485,7 @@ function buildBuildEmbed(heroName, hero, userCollection) {
       const active = b.a.every(a => ownedHeroes.has(a));
       const icon = active ? '✅' : '❌';
       const allies = b.a.map(a => ownedHeroes.has(a) ? `✅${a}` : `❌${a}`).join(', ');
-      const label = b.combo ? `⚡ **${b.n}** *(Bond Combo)*` : `${icon} **${b.n}**`;
+      const label = b.combo ? `⚡ **${b.n}** *(Bond Combo)*` : b.passive ? `${icon} **${b.n}** *(passif)*` : `${icon} **${b.n}**`;
       return `${label}\navec ${allies}\n→ ${b.e}`;
     }).join('\n\n');
     embed1.addFields({ name: '🔗 Bonds', value: bondText.slice(0, 1024), inline: false });
@@ -536,7 +536,7 @@ function buildBuildEmbed(heroName, hero, userCollection) {
       const active = b.a.every(a => ownedHeroes.has(a));
       const icon = active ? '✅' : '❌';
       const allies = b.a.map(a => ownedHeroes.has(a) ? `✅${a}` : `❌${a}`).join(', ');
-      const label = b.combo ? `⚡ **${b.n}** *(Bond Combo)*` : `${icon} **${b.n}**`;
+      const label = b.combo ? `⚡ **${b.n}** *(Bond Combo)*` : b.passive ? `${icon} **${b.n}** *(passif)*` : `${icon} **${b.n}**`;
       return `${label}\navec ${allies}\n→ ${b.e}`;
     }).join('\n\n');
     embed2.addFields({ name: '🔗 Bonds', value: bondText.slice(0, 1024), inline: false });
