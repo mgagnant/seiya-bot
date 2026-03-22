@@ -1,8 +1,10 @@
 require('dotenv').config();
-const { Client, GatewayIntentBits } = require('discord.js');
+const { Client, GatewayIntentBits, AttachmentBuilder } = require('discord.js');
 const { getHero, getAllHeroes, getHeroesByFaction, DB } = require('./data/heroes');
 const { addItem, removeItem, getUserCollection, clearUserCollection } = require('./data/db');
 const { buildHeroEmbed, buildBuildEmbed, buildCollectionEmbed, buildFactionEmbed, buildBondsEmbed, buildListeEmbed } = require('./embeds');
+const { generateCollectionImage } = require('./collectionImage');
+const fs = require('fs');
 
 // Listes pour l'autocomplete
 const ALL_HEROES = Object.keys(DB);
@@ -75,7 +77,27 @@ client.on('interactionCreate', async interaction => {
       const sub = interaction.options.getSubcommand();
       if (sub === 'voir') {
         const collection = getUserCollection(user.id);
-        return interaction.editReply({ embeds: [buildCollectionEmbed(user.id, collection, null)] });
+        const ownedHeroes = new Set(collection.heroes || []);
+        if (!ownedHeroes.size) {
+          return interaction.editReply('❌ Tu n\'as aucun héros dans ta collection.');
+        }
+        try {
+          const imgPath = await generateCollectionImage(ownedHeroes, DB);
+          if (imgPath) {
+            const attachment = new AttachmentBuilder(imgPath, { name: 'collection.png' });
+            await interaction.editReply({
+              content: `🏛️ **Ta collection · ${ownedHeroes.size} héros possédés**`,
+              files: [attachment]
+            });
+            fs.unlink(imgPath, () => {});
+          } else {
+            return interaction.editReply({ embeds: [buildCollectionEmbed(user.id, collection, null)] });
+          }
+        } catch(e) {
+          console.error('Erreur génération image:', e);
+          return interaction.editReply({ embeds: [buildCollectionEmbed(user.id, collection, null)] });
+        }
+        return;
       }
       if (sub === 'heros') {
         const collection = getUserCollection(user.id);
