@@ -78,11 +78,13 @@ client.on('interactionCreate', async interaction => {
       if (sub === 'voir') {
         const collection = getUserCollection(user.id);
         const ownedHeroes = new Set(collection.heroes || []);
-        if (!ownedHeroes.size) {
-          return interaction.editReply('❌ Tu n\'as aucun héros dans ta collection.');
+        const ownedArt = new Set(collection.artifacts || []);
+        const ownedFC = new Set(collection.fc || []);
+        if (!ownedHeroes.size && !ownedArt.size && !ownedFC.size) {
+          return interaction.editReply('❌ Ta collection est vide.');
         }
         try {
-          const imgPath = await generateCollectionImage(ownedHeroes, DB);
+          const imgPath = await generateCollectionImage(ownedHeroes, ownedArt, ownedFC, DB);
           if (imgPath) {
             const attachment = new AttachmentBuilder(imgPath, { name: 'collection.png' });
             await interaction.editReply({
