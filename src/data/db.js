@@ -1,72 +1,86 @@
-const fs = require('fs');
-const path = require('path');
+const https = require('https');
 
-// /app/data est le volume persistant Railway
-// En local, utilise le dossier data/ du projet
-const dataDir = process.env.RAILWAY_VOLUME_MOUNT_PATH
-  ? path.join(process.env.RAILWAY_VOLUME_MOUNT_PATH)
-  : path.join(__dirname, '../../../data');
+const SUPABASE_URL = process.env.SUPABASE_URL || 'https://mjdjqhmprsoaalmjygvx.supabase.co';
+const SUPABASE_KEY = process.env.SUPABASE_KEY;
 
-const dbPath = path.join(dataDir, 'collections.json');
-
-if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
-
-function load() {
-  try {
-    if (fs.existsSync(dbPath)) return JSON.parse(fs.readFileSync(dbPath, 'utf8'));
-  } catch (e) { console.error('Erreur lecture collections.json:', e); }
-  return {};
+function supabase(method, path, body = null) {
+  return new Promise((resolve, reject) => {
+    const url = new URL(SUPABASE_URL + path);
+    const options = {
+      hostname: url.hostname,
+      path: url.pathname + url.search,
+      method,
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${SUPABASE_KEY}`,
+        'Content-Type': 'application/json',
+        'Prefer': method === 'POST' ? 'resolution=merge-duplicates,return=representation' : 'return=representation',
+      }
+    };
+    const req = https.request(options, res => {
+      let data = '';
+      res.on('data', chunk => data += chunk);
+      res.on('end', () => {
+        try { resolve(JSON.parse(data)); }
+        catch (e) { resolve([]); }
+      });
+    });
+    req.on('error', reject);
+    if (body) req.write(JSON.stringify(body));
+    req.end();
+  });
 }
 
-function save(data) {
-  try { fs.writeFileSync(dbPath, JSON.stringify(data, null, 2), 'utf8'); }
-  catch (e) { console.error('Erreur écriture collections.json:', e); }
+async function getRow(userId) {
+  const rows = await supabase('GET', `/rest/v1/collections?user_id=eq.${userId}&select=*`);
+  if (rows && rows.length > 0) return rows[0];
+  return { user_id: userId, heroes: [], artifacts: [], fc: [] };
 }
 
-function getUser(data, userId) {
-  if (!data[userId]) data[userId] = { hero: [], art: [], fc: [] };
-  return data[userId];
+async function saveRow(row) {
+  await supabase('POST', '/rest/v1/collections', row);
 }
 
-function addItem(userId, type, name) {
-  const data = load();
-  const user = getUser(data, userId);
-  if (!user[type].includes(name)) user[type].push(name);
-  save(data);
+async function addItem(userId, type, name) {
+  const row = await getRow(userId);
+  if (!row[type]) row[type] = [];
+  if (!row[type].includes(name)) row[type].push(name);
+  await saveRow(row);
 }
 
-function removeItem(userId, type, name) {
-  const data = load();
-  const user = getUser(data, userId);
-  user[type] = user[type].filter(n => n !== name);
-  save(data);
+async function removeItem(userId, type, name) {
+  const row = await getRow(userId);
+  if (!row[type]) return;
+  row[type] = row[type].filter(n => n !== name);
+  await saveRow(row);
 }
 
-function hasItem(userId, type, name) {
-  return getUser(load(), userId)[type].includes(name);
+async function hasItem(userId, type, name) {
+  const row = await getRow(userId);
+  return (row[type] || []).includes(name);
 }
 
-function getUserItems(userId, type) {
-  return getUser(load(), userId)[type] || [];
+async function getUserItems(userId, type) {
+  const row = await getRow(userId);
+  return row[type] || [];
 }
 
-function getUserCollection(userId) {
-  const user = getUser(load(), userId);
-  return { heroes: user.hero || [], artifacts: user.art || [], fc: user.fc || [] };
+async function getUserCollection(userId) {
+  const row = await getRow(userId);
+  return { heroes: row.heroes || [], artifacts: row.artifacts || [], fc: row.fc || [] };
 }
 
-function clearUserCollection(userId, type = null) {
-  const data = load();
-  if (!data[userId]) return;
-  if (type) data[userId][type] = [];
-  else data[userId] = { hero: [], art: [], fc: [] };
-  save(data);
+async function clearUserCollection(userId, type = null) {
+  const row = await getRow(userId);
+  if (type) row[type] = [];
+  else { row.heroes = []; row.artifacts = []; row.fc = []; }
+  await saveRow(row);
 }
 
 function sortByOwned(items, ownedSet) {
   return [...items].sort((a, b) => (ownedSet.has(a) ? 0 : 1) - (ownedSet.has(b) ? 0 : 1));
 }
 
-console.log(`📁 Collections stockées dans : ${dbPath}`);
+console.log('📦 Collections stockées sur Supabase');
 
 module.exports = { addItem, removeItem, hasItem, getUserItems, getUserCollection, clearUserCollection, sortByOwned };

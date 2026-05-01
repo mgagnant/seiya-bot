@@ -69,14 +69,14 @@ client.on('interactionCreate', async interaction => {
       const nom = interaction.options.getString('nom');
       const result = getHero(nom);
       if (!result) return interaction.editReply(`❌ Héros introuvable : **${nom}**`);
-      const collection = getUserCollection(user.id);
+      const collection = await getUserCollection(user.id);
       return interaction.editReply({ embeds: buildBuildEmbed(result.name, result.data, collection) });
     }
 
     if (commandName === 'collection') {
       const sub = interaction.options.getSubcommand();
       if (sub === 'voir') {
-        const collection = getUserCollection(user.id);
+        const collection = await getUserCollection(user.id);
         const ownedHeroes = new Set(collection.heroes || []);
         const ownedArt = new Set(collection.artifacts || []);
         const ownedFC = new Set(collection.fc || []);
@@ -102,33 +102,33 @@ client.on('interactionCreate', async interaction => {
         return;
       }
       if (sub === 'heros') {
-        const collection = getUserCollection(user.id);
+        const collection = await getUserCollection(user.id);
         return interaction.editReply({ embeds: [buildCollectionEmbed(user.id, collection, 'heroes')] });
       }
       if (sub === 'artefacts') {
-        const collection = getUserCollection(user.id);
+        const collection = await getUserCollection(user.id);
         return interaction.editReply({ embeds: [buildCollectionEmbed(user.id, collection, 'artifacts')] });
       }
       if (sub === 'pouvoirs') {
-        const collection = getUserCollection(user.id);
+        const collection = await getUserCollection(user.id);
         return interaction.editReply({ embeds: [buildCollectionEmbed(user.id, collection, 'fc')] });
       }
       if (sub === 'ajouter') {
         const type = interaction.options.getString('type');
         const nom = interaction.options.getString('nom');
-        addItem(user.id, type, nom);
+        await addItem(user.id, type, nom);
         const label = { hero: 'héros', art: 'artifact', fc: 'Ultimate Power' }[type];
         return interaction.editReply(`✅ **${nom}** ajouté à ta collection (${label}).`);
       }
       if (sub === 'retirer') {
         const type = interaction.options.getString('type');
         const nom = interaction.options.getString('nom');
-        removeItem(user.id, type, nom);
+        await removeItem(user.id, type, nom);
         const label = { hero: 'héros', art: 'artifact', fc: 'Ultimate Power' }[type];
         return interaction.editReply(`🗑️ **${nom}** retiré de ta collection (${label}).`);
       }
       if (sub === 'reset') {
-        clearUserCollection(user.id);
+        await clearUserCollection(user.id);
         return interaction.editReply(`🗑️ Ta collection a été réinitialisée.`);
       }
     }
@@ -136,7 +136,7 @@ client.on('interactionCreate', async interaction => {
     if (commandName === 'faction') {
       const fac = interaction.options.getString('nom');
       const heroes = getHeroesByFaction(fac);
-      const collection = getUserCollection(user.id);
+      const collection = await getUserCollection(user.id);
       return interaction.editReply({ embeds: [buildFactionEmbed(fac, heroes, collection.heroes)] });
     }
 
@@ -149,7 +149,7 @@ client.on('interactionCreate', async interaction => {
       const nom = interaction.options.getString('nom');
       const result = getHero(nom);
       if (!result) return interaction.editReply(`❌ Héros introuvable : **${nom}**`);
-      const collection = getUserCollection(user.id);
+      const collection = await getUserCollection(user.id);
       return interaction.editReply({ embeds: [buildBondsEmbed(result.name, result.data, collection.heroes)] });
     }
 

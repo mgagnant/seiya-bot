@@ -48,4 +48,14 @@ module.exports = [
     .setName('liste')
     .setDescription('Liste tous les héros disponibles dans la base'),
 
+  new SlashCommandBuilder()
+    .setName('artefact')
+    .setDescription('Top 10 des héros les plus compatibles avec un artefact')
+    .addStringOption(opt => opt.setName('nom').setDescription("Nom de l'artefact").setRequired(true).setAutocomplete(true)),
+
+  new SlashCommandBuilder()
+    .setName('carte')
+    .setDescription('Top 10 des héros les plus compatibles avec une carte Ultimate Power')
+    .addStringOption(opt => opt.setName('nom').setDescription('Nom de la carte').setRequired(true).setAutocomplete(true)),
+
 ].map(cmd => cmd.toJSON());
